@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Free Arcade App</title>
+    <link rel="manifest" href="manifest.json">
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; background: #121212; color: white; margin: 0; padding: 20px; }
+        .container { max-width: 500px; margin: auto; }
+        h1 { color: #00ff88; }
+        .screen { display: none; background: #1e1e1e; padding: 20px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        .active { display: block; }
+        button { background: #00ff88; color: black; border: none; padding: 12px 24px; font-size: 18px; font-weight: bold; border-radius: 5px; cursor: pointer; margin-top: 15px; }
+        button:hover { background: #00cc6e; }
+        /* Ad Screen Styling */
+        #ad-box { background: #000; width: 100%; height: 250px; display: flex; align-items: center; justify-content: center; border: 2px dashed #ff3333; margin: 15px 0; }
+        #timer { font-size: 20px; color: #ff3333; font-weight: bold; }
+        /* Game Styling */
+        #click-count { font-size: 24px; color: #00ff88; margin: 15px 0; }
+        #game-target { width: 100px; height: 100px; background: red; border-radius: 50%; margin: 20px auto; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🕹️ Free Arcade App</h1>
+    <p>Install this web app via your browser settings to play offline!</p>
+
+    <!-- SCREEN 1: MAIN MENU -->
+    <div id="menu-screen" class="screen active">
+        <h2>Ready to Play?</h2>
+        <p>Watch a quick 5-second ad to unlock your daily game session.</p>
+        <button onclick="startAd()">Watch Ad & Play</button>
+    </div>
+
+    <!-- SCREEN 2: THE AD GATE -->
+    <div id="ad-screen" class="screen">
+        <h2>Sponsor Message</h2>
+        <div id="ad-box">
+            <!-- PLACEHOLDER FOR AD NETWORK SCRIPT -->
+            <p style="color: #aaa;">[Google AdSense / AdInPlay Video Ad Running]</p>
+        </div>
+        <div id="timer">You can skip in: <span id="countdown">5</span>s</div>
+        <button id="skip-btn" onclick="startGame()" style="display:none; background:#ff3333; color:white;">Enter Game</button>
+    </div>
+
+    <!-- SCREEN 3: THE GAME -->
+    <div id="game-screen" class="screen">
+        <h2>Catch the Red Dot!</h2>
+        <div id="click-count">Score: <span id="score">0</span></div>
+        <div id="game-target" onclick="scorePoint()">TAP ME</div>
+        <button onclick="showMenu()" style="background:#555; color:white; font-size:14px;">Quit to Menu</button>
+    </div>
+</div>
+
+<script>
+    let score = 0;
+
+    // Register PWA Service Worker for mobile installation
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('service-worker.js');
+    }
+
+    // Ad Logic
+    function startAd() {
+        changeScreen('ad-screen');
+        let timeLeft = 5;
+        const countdownEl = document.getElementById('countdown');
+        const skipBtn = document.getElementById('skip-btn');
+        const timerEl = document.getElementById('timer');
+        
+        skipBtn.style.display = 'none';
+        timerEl.style.display = 'block';
+        countdownEl.innerText = timeLeft;
+
+        const interval = setInterval(() => {
+            timeLeft--;
+            countdownEl.innerText = timeLeft;
+            if (timeLeft <= 0) {
+                clearInterval(interval);
+                timerEl.style.display = 'none';
+                skipBtn.style.display = 'block'; // Unlocks the game button
+            }
+        }, 1000);
+    }
+
+    // Game Logic
+    function startGame() {
+        score = 0;
+        document.getElementById('score').innerText = score;
+        changeScreen('game-screen');
+        moveTarget();
+    }
+
+    function scorePoint() {
+        score++;
+        document.getElementById('score').innerText = score;
+        moveTarget();
+    }
+
+    function moveTarget() {
+        const target = document.getElementById('game-target');
+        // Randomly bounce the target around the screen space
+        const randomColor = '#' + Math.floor(Math.random()*16777215).toString(16);
+        target.style.background = randomColor;
+        target.style.marginTop = Math.floor(Math.random() * 40 + 10) + 'px';
+    }
+
+    function showMenu() {
+        changeScreen('menu-screen');
+    }
+
+    function changeScreen(screenId) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(screenId).classList.add('active');
+    }
+</script>
+
+</body>
+</html>
